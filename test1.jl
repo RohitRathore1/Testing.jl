@@ -40,14 +40,55 @@ function to_mesh_state(dataset, point_arrays=nothing, cell_arrays=nothing)
 
    polydata  = dataset
 
-    if polydata.get(points[]) == nothing
+    if polydata.points[] == nothing
         return nothing
     end
 
     # Extract mesh 
-    points = vtk_polydata.points[]
+    points = polydata.points().data()
+    verts = Dict(
+        polydata.points().data()
+        if polydata.verts()
+        else []
+        end
+    )
+    lines = Dict(
+        polydata.lines().data()
+        if polydata.lines()
+        else []
+        end
+    )
+    polys = Dict(
+        polydata.polys().data()
+        if polydata.polys()
+        else []
+        end
+    )
+    strips = Dict(
+        polydata.strips().data()
+        if polydata.strips()
+        else []
+        end
+    )
 
-    verts = vtk_polydata.verts[]
+    # Extract field
+    values = nothing
+    js_types = "Float32Array"
+    nb_comp = 1
+    dataRange = [0, 1]
+    location = nothing
+    if field_to_keep != nothing
+        p_array = polydata.PointData().Array(field_to_keep)
+        c_array = polydata.CellData().Array(field_to_keep)
+
+        if c_array:
+            dataRange = c_array.Range(-1)
+            nb_comp = c_array.NumberOfComponents()
+            values = c_array
+            js_types = to_js_type[str(values.dtype)]
+            location = "PointData"
+    end
+    return state
     
 end
 
